@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      border-bottom: 2px solid #000;
+      padding-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="togglePricingVisibility()">Toggle Pricing Visibility</button>
+  <div class="section" id="pricingSection">
+    <h2>Pricing Settings</h2>
+    <label>Event Type 
+      <select id="eventType" onchange="toggleEventType()">
+        <option value="private">Private</option>
+        <option value="community">Community</option>
+      </select>
+    </label>
+    <div id="privatePricing">
+      <label>Daytime Base Price <input type="number" id="dayPrice" value="3000"></label>
+      <label>Evening Base Price <input type="number" id="eveningPrice" value="5000"></label>
+      <label>Beer/Wine per Guest <input type="number" id="bwPrice" value="40"></label>
+      <label>Beer/Wine/Cocktails per Guest <input type="number" id="bwcPrice" value="55"></label>
+      <label>Upcycle Light Bites per Guest <input type="number" id="lightBitesPrice" value="50"></label>
+      <label>Three Course Seated per Guest <input type="number" id="threeCoursePrice" value="100"></label>
+      <label>Six Course Seated per Guest <input type="number" id="sixCoursePrice" value="200"></label>
+    </div>
+    <div id="communityPricing" style="display:none;">
+      <label>Daytime Base Price <input type="number" id="comDayPrice" value="1500"></label>
+      <label>Evening Base Price <input type="number" id="comEveningPrice" value="2500"></label>
+      <label>Beer/Wine per Guest <input type="number" id="comBWPrice" value="30"></label>
+      <label>Non-Alcoholic Option per Guest <input type="number" id="comNA" value="10"></label>
+      <label>Upcycled Family Meal per Guest <input type="number" id="comMeal" value="20"></label>
+    </div>
+    <button onclick="savePrices()">Save Prices</button>
+  </div>
+
+  <div class="section">
+    <h2>Event Calculator</h2>
+    <label>Event Type 
+      <select id="eventTypeCalc" onchange="syncEventTypeCalc()">
+        <option value="private">Private</option>
+        <option value="community">Community</option>
+      </select>
+    </label>
+    <label>Time of Day 
+      <select id="timeOfDay">
+        <option value="day">Daytime</option>
+        <option value="evening">Evening</option>
+      </select>
+    </label>
+    <label>Total Hours <input type="number" id="hours" value="4"></label>
+    <label>Number of Guests <input type="number" id="guests" value="100"></label>
+    <label>Beverage 
+      <select id="beverage">
+        <option value="bw">Beer/Wine</option>
+        <option value="bwc">Beer/Wine/Cocktails</option>
+        <option value="na">N/A</option>
+      </select>
+    </label>
+    <label>Food 
+      <select id="food">
+        <option value="light">Upcycle light bites</option>
+        <option value="three">Three course seated</option>
+        <option value="six">Six course seated</option>
+        <option value="meal">Upcycled family meal</option>
+      </select>
+    </label>
+    <label>Profit Margin (%) <input type="number" id="profitMargin" value="20"></label>
+    <button onclick="calculateCost()">Calculate</button>
+    <h3>Total Estimated Cost: $<span id="totalCost">0</span></h3>
+    <h4>Cost per Guest: $<span id="costPerGuest">0</span></h4>
+    <h4>Suggested Price per Guest (with Profit): $<span id="suggestedPrice">0</span></h4>
+  </div>
+
+  <script>
+    let privatePrices = {
+      day: 3000,
+      evening: 5000,
+      bw: 40,
+      bwc: 55,
+      light: 50,
+      three: 100,
+      six: 200
+    };
+
+    let communityPrices = {
+      day: 1500,
+      evening: 2500,
+      bw: 30,
+      na: 10,
+      meal: 20
+    };
+
+    function toggleEventType() {
+      const type = document.getElementById("eventType").value;
+      document.getElementById("privatePricing").style.display = type === "private" ? "block" : "none";
+      document.getElementById("communityPricing").style.display = type === "community" ? "block" : "none";
+    }
+
+    function syncEventTypeCalc() {
+      const type = document.getElementById("eventTypeCalc").value;
+      document.getElementById("eventType").value = type;
+      toggleEventType();
+      filterOptions(type);
+    }
+
+    function togglePricingVisibility() {
+      const section = document.getElementById("pricingSection");
+      section.style.display = section.style.display === "none" ? "block" : "none";
+    }
+
+    function savePrices() {
+      privatePrices.day = parseFloat(document.getElementById('dayPrice').value);
+      privatePrices.evening = parseFloat(document.getElementById('eveningPrice').value);
+      privatePrices.bw = parseFloat(document.getElementById('bwPrice').value);
+      privatePrices.bwc = parseFloat(document.getElementById('bwcPrice').value);
+      privatePrices.light = parseFloat(document.getElementById('lightBitesPrice').value);
+      privatePrices.three = parseFloat(document.getElementById('threeCoursePrice').value);
+      privatePrices.six = parseFloat(document.getElementById('sixCoursePrice').value);
+
+      communityPrices.day = parseFloat(document.getElementById('comDayPrice').value);
+      communityPrices.evening = parseFloat(document.getElementById('comEveningPrice').value);
+      communityPrices.bw = parseFloat(document.getElementById('comBWPrice').value);
+      communityPrices.na = parseFloat(document.getElementById('comNA').value);
+      communityPrices.meal = parseFloat(document.getElementById('comMeal').value);
+
+      alert("Prices saved successfully.");
+    }
+
+    function calculateCost() {
+      const eventTypeCalc = document.getElementById('eventTypeCalc').value;
+      const eventType = eventTypeCalc;
+      const timeOfDay = document.getElementById('timeOfDay').value;
+      const hours = parseInt(document.getElementById('hours').value);
+      const guests = parseInt(document.getElementById('guests').value);
+      const beverage = document.getElementById('beverage').value;
+      const food = document.getElementById('food').value;
+
+      let prices = eventType === 'private' ? privatePrices : communityPrices;
+      let base = prices[timeOfDay];
+      if (hours > 4) {
+        base += (hours - 4) * 1000;
+      }
+
+      let drinkCost = 0;
+      if (beverage !== 'na') {
+        drinkCost = prices[beverage] * guests;
+      } else if (eventType === 'community') {
+        drinkCost = prices.na * guests;
+      }
+
+      let foodCost = 0;
+      if (eventType === 'private') {
+        foodCost = prices[food] * guests;
+      } else if (eventType === 'community') {
+        foodCost = prices.meal * guests;
+      }
+
+      let total = base + drinkCost + foodCost;
+      document.getElementById('totalCost').textContent = total.toFixed(2);
+      const costPerGuest = total / guests;
+      document.getElementById('costPerGuest').textContent = costPerGuest.toFixed(2);
+      const margin = parseFloat(document.getElementById('profitMargin').value) / 100;
+      const suggestedPrice = costPerGuest * (1 + margin);
+      document.getElementById('suggestedPrice').textContent = suggestedPrice.toFixed(2);
+    }
+
+    function filterOptions(type) {
+      const foodSelect = document.getElementById("food");
+      const beverageSelect = document.getElementById("beverage");
+
+      const foodOptions = {
+        private: ["light", "three", "six"],
+        community: ["meal"]
+      };
+
+      const beverageOptions = {
+        private: ["bw", "bwc", "na"],
+        community: ["bw", "na"]
+      };
+
+      [...foodSelect.options].forEach(option => {
+        option.style.display = foodOptions[type].includes(option.value) ? "block" : "none";
+      });
+      foodSelect.value = foodOptions[type][0];
+
+      [...beverageSelect.options].forEach(option => {
+        option.style.display = beverageOptions[type].includes(option.value) ? "block" : "none";
+      });
+      beverageSelect.value = beverageOptions[type][0];
+    }
+  </script>
+</body>
+</html>
